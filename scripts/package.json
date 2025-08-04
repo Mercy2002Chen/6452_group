@@ -1,0 +1,24 @@
+{
+  "name": "fruit-supply-chain-api",
+  "version": "1.0.0",
+  "description": "API封装用于与水果供应链智能合约交互",
+  "main": "fruitSupplyChainAPI.js",
+  "scripts": {
+    "test": "node fruitSupplyChainAPI.test.js",
+    "example": "node usageExample.js"
+  },
+  "keywords": [
+    "blockchain",
+    "ethereum",
+    "supply-chain",
+    "smart-contracts"
+  ],
+  "author": "Developer",
+  "license": "MIT",
+  "dependencies": {
+    "web3": "^1.8.0"
+  },
+  "devDependencies": {
+    "mocha": "^10.0.0"
+  }
+}

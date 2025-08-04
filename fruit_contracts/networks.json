@@ -1,0 +1,8 @@
+{
+  "sepolia": {
+    "rpc_url": "https://sepolia.infura.io/v3/beff8273b87e4f0e946bb817db57f1af",
+    "chain_id": 11155111,
+    "permission_addr": "0x2Ec3DBDB591c06c17b9972bDfa5e1783Ba20186c",
+    "trace_addr":      "0xbABaf3bb876C61a468574D28294A8E185DAA033F"
+  }
+}
