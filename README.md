@@ -1,3 +1,24 @@
+
+### ⚙️ 环境变量配置（.env）
+
+请在项目根目录下创建 `.env` 文件，并根据以下示例配置：
+
+```env
+# 区块链相关配置
+RPC_URL=https://sepolia.infura.io/v3/beff8273b87e4f0e946bb817db57f1af
+CHAIN_ID=11155111
+PERMISSION_ADDR=0xb6af7e98f40aab7c79069d21f90bb60b857b481e
+TRACE_ADDR=0x31Ef8665357fdA2f94b936B3A9F4B3577c847089
+
+# PostgreSQL 数据库配置
+DB_NAME=fruit_chain
+DB_USER=fruit_user
+DB_PASSWORD=fruit_pass
+DB_HOST=localhost
+DB_PORT=5432
+```
+
+📌 **说明：** 你只需要根据实际部署情况修改合约地址（`*_ADDR`）与数据库连接信息（`DB_*`），其他保持默认即可。
 ## 🚀 启动项目
 
 ### 1️⃣ 后端服务（FastAPI）
@@ -65,24 +86,3 @@ const API_BASE_URL = "http://127.0.0.1:8000";
 如需部署或打包构建等说明，可在后续补充对应章节。
 
 ---
-
-### ⚙️ 环境变量配置（.env）
-
-请在项目根目录下创建 `.env` 文件，并根据以下示例配置：
-
-```env
-# 区块链相关配置
-RPC_URL=https://sepolia.infura.io/v3/beff8273b87e4f0e946bb817db57f1af
-CHAIN_ID=11155111
-PERMISSION_ADDR=0xb6af7e98f40aab7c79069d21f90bb60b857b481e
-TRACE_ADDR=0x31Ef8665357fdA2f94b936B3A9F4B3577c847089
-
-# PostgreSQL 数据库配置
-DB_NAME=fruit_chain
-DB_USER=fruit_user
-DB_PASSWORD=fruit_pass
-DB_HOST=localhost
-DB_PORT=5432
-```
-
-📌 **说明：** 你只需要根据实际部署情况修改合约地址（`*_ADDR`）与数据库连接信息（`DB_*`），其他保持默认即可。
