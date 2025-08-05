@@ -1,16 +1,29 @@
+## 🐳 One-Click Startup with Docker
 
-### ⚙️ 环境变量配置（.env）
+This project includes a pre-configured `docker-compose.yml` file that allows you to start the frontend, backend, and database services with a single command.
 
-请在项目根目录下创建 `.env` 文件，并根据以下示例配置：
+### ✅ Startup Command
+
+Run the following in the root directory:
+
+```bash
+docker-compose up --build
+```
+
+---
+
+### ⚙️ Environment Variable Configuration (`.env`)
+
+Create a `.env` file in the root directory with the following content:
 
 ```env
-# 区块链相关配置
+# Blockchain settings
 RPC_URL=https://sepolia.infura.io/v3/beff8273b87e4f0e946bb817db57f1af
 CHAIN_ID=11155111
 PERMISSION_ADDR=0xb6af7e98f40aab7c79069d21f90bb60b857b481e
 TRACE_ADDR=0x31Ef8665357fdA2f94b936B3A9F4B3577c847089
 
-# PostgreSQL 数据库配置
+# PostgreSQL settings
 DB_NAME=fruit_chain
 DB_USER=fruit_user
 DB_PASSWORD=fruit_pass
@@ -18,48 +31,43 @@ DB_HOST=localhost
 DB_PORT=5432
 ```
 
-📌 **说明：** 你只需要根据实际部署情况修改合约地址（`*_ADDR`）与数据库连接信息（`DB_*`），其他保持默认即可。
-## 🚀 启动项目
+📌 **Note:** Only update the contract addresses (`*_ADDR`) and database connection details (`DB_*`) based on your actual deployment. Defaults are sufficient for local development.
 
-### 1️⃣ 后端服务（FastAPI）
+---
 
-确保已安装依赖（如未安装可运行）：
+## 🚀 Start Without Docker (Manual Mode)
+
+### 1️⃣ Backend (FastAPI)
+
+Install the required dependencies:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-然后在项目根目录下运行：
+Start the backend server:
 
 ```bash
 uvicorn api:app --reload
 ```
 
-- 默认后端服务运行在：`http://127.0.0.1:8000`
-- 若 `api.py` 文件位置或名称不同，请相应修改 `api:app`
+- The backend will be available at: `http://127.0.0.1:8000`
+- If the main file is not `api.py`, modify `api:app` accordingly
 
 ---
 
-### 2️⃣ 前端界面（Vite + React）
+### 2️⃣ Frontend (Vite + React)
 
-进入前端项目目录（例如 `fruit-dapp/`）：
-启动开发服务器
+Go to the frontend directory (e.g., `fruit-dapp/`) and run:
+
 ```bash
 cd fruit-dapp
+npm install
 npm run dev
 ```
 
-安装依赖：
-
-```bash
-npm install
-```
-
-
-
-
-- 默认前端服务运行在：`http://localhost:5173`
-- 若调用后端 API，请确保前端代码中的接口地址正确配置，例如：
+- The frontend will be available at: `http://localhost:5173`
+- Ensure the frontend is pointing to the correct API base URL:
 
 ```js
 const API_BASE_URL = "http://127.0.0.1:8000";
@@ -67,20 +75,14 @@ const API_BASE_URL = "http://127.0.0.1:8000";
 
 ---
 
-### 📦 项目结构（可选）
+### 📦 Project Structure (Optional)
 
 ```plaintext
 .
-├── api.py               # FastAPI 后端主文件
-├── requirements.txt     # Python 后端依赖
-├── fruit-dapp/          # 前端项目文件夹（Vite + React）
+├── api.py               # FastAPI backend main file
+├── requirements.txt     # Backend dependencies
+├── fruit-dapp/          # Frontend project (Vite + React)
 │   ├── package.json
 │   ├── index.html
 │   └── src/
 ```
-
----
-
-如需部署或打包构建等说明，可在后续补充对应章节。
-
----
