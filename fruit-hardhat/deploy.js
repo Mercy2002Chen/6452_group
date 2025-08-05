@@ -1,30 +1,33 @@
-const hre = require("hardhat");
-const { ethers } = hre;
+import { ethers } from "ethers";
+import permissionAbi from "./abis/PermissionControl.json"; // 包含 abi 和 bytecode
 
-async function main() {
-  // ==== 🧾 配置信息：写死在脚本里 ====
-  const PRIVATE_KEY = "6324443524a62447cf4565ea95d7ec4e1e90d0ab7d8d2529be95255faa2cf1ac";
-  const RPC_URL = "https://sepolia.infura.io/v3/beff8273b87e4f0e946bb817db57f1af";
+export default function DeployContractButton() {
+  const deployContract = async () => {
+    if (!window.ethereum) {
+      alert("请安装 MetaMask");
+      return;
+    }
 
-  // ==== 🔗 设置 provider 和 signer ====
- const provider = new ethers.JsonRpcProvider(RPC_URL);
-  const wallet = new ethers.Wallet(PRIVATE_KEY, provider);
+    const provider = new ethers.BrowserProvider(window.ethereum);
+    const signer = await provider.getSigner();
 
-  console.log("部署账户地址：", await wallet.getAddress());
+    const factory = new ethers.ContractFactory(
+      permissionAbi.abi,
+      permissionAbi.bytecode,
+      signer
+    );
 
-  const PermissionControlFactory = await ethers.getContractFactory("PermissionControl", wallet);
-  const permissionContract = await PermissionControlFactory.deploy();
-  await permissionContract.waitForDeployment();
+    try {
+      const contract = await factory.deploy(); // 用户钱包会弹出确认部署交易
+      await contract.waitForDeployment();
 
-  const permAddr = await permissionContract.getAddress();
-  console.log("✅ PermissionControl 合约部署成功：", permAddr);
+      const addr = await contract.getAddress();
+      alert(`✅ 合约部署成功: ${addr}`);
+    } catch (err) {
+      console.error("❌ 合约部署失败", err);
+      alert("合约部署失败");
+    }
+  };
 
-  // ✅ 正确读取内部合约地址
-  const fruitAddr = await permissionContract.traceabilityContract();
-  console.log("📦 内部 FruitTraceability 地址：", fruitAddr);
+  return <button onClick={deployContract}>部署 Permission 合约</button>;
 }
-
-main().catch((err) => {
-  console.error("❌ 部署失败：", err);
-  process.exit(1);
-});

@@ -46,7 +46,7 @@ contract PermissionControl is AccessControl {
     event RoleRevokedLogged(bytes32 indexed role, address indexed account, address indexed sender);
 
 
-    constructor(address _traceability) {
+    constructor() {
         // 这两行符号来自 AccessControl
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         FruitTraceability ft = new FruitTraceability(address(this));
