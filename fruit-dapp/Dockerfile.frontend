@@ -1,0 +1,13 @@
+ # fruit-dapp/Dockerfile.frontend
+FROM node:18
+
+WORKDIR /app
+
+COPY . .
+
+RUN npm install
+RUN npm run build
+
+# Use `serve` to serve production build
+RUN npm install -g serve
+CMD ["serve", "-s", "dist", "-l", "5173"]

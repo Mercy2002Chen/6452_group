@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-// 1. 从 GitHub 直链导入 AccessControl
+// 1. Import AccessControl from OpenZeppelin
 import "@openzeppelin/contracts/access/AccessControl.sol";
 
-// 2. 引入同目录下的 FruitTraceability 枚举类型
+// 2. Import StageType enum from the same directory
 import "./FruitTraceability.sol";
 
 interface IFruitTraceability {
@@ -29,12 +29,13 @@ interface IFruitTraceability {
 }
 
 contract PermissionControl is AccessControl {
-    // 定义了四个权限角色
+    // Define four role constants
     bytes32 public constant FARMER_ROLE    = keccak256("FARMER_ROLE");
     bytes32 public constant INSPECTOR_ROLE = keccak256("INSPECTOR_ROLE");
     bytes32 public constant RETAILER_ROLE  = keccak256("RETAILER_ROLE");
     bytes32 public constant CONSUMER_ROLE  = keccak256("CONSUMER_ROLE");
-    // FruitTraceability 合约地址，由部署者设定
+
+    // Address of the FruitTraceability contract, set by deployer
     address public traceabilityContract;
 
     event OwnershipTransferRequested(
@@ -45,15 +46,14 @@ contract PermissionControl is AccessControl {
     event RoleGrantedLogged(bytes32 indexed role, address indexed account, address indexed sender);
     event RoleRevokedLogged(bytes32 indexed role, address indexed account, address indexed sender);
 
-
     constructor(address _traceability) {
-        // 这两行符号来自 AccessControl
+        // AccessControl's built-in role assignment
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         FruitTraceability ft = new FruitTraceability(address(this));
         traceabilityContract = address(ft);
     }
 
-    // 重写 grant/revoke，以便只有管理员能调用
+    // Override grant/revoke so that only admin can call them
     function grantRole(bytes32 role, address account)
         public
         override
@@ -72,16 +72,14 @@ contract PermissionControl is AccessControl {
         emit RoleRevokedLogged(role, account, msg.sender);
     }
 
-    
-    
-      /* --- 可选：部署后更新追溯合约地址 --- */
+    /* --- Optional: update traceability contract address after deployment --- */
     function setTraceabilityContract(address newAddr) external onlyRole(DEFAULT_ADMIN_ROLE) {
         traceabilityContract = newAddr;
     }
 
-    /* --- 业务函数 --- */
+    /* --- Business logic --- */
 
-    // 1. 农户注册批次
+    // 1. Farmer registers a batch
     function registerBatch(uint256 batchId, string calldata metadata)
         external onlyRole(FARMER_ROLE)
     {
@@ -89,7 +87,7 @@ contract PermissionControl is AccessControl {
             .internalRegisterBatch(batchId, metadata, msg.sender);
     }
 
-    // 2. 记录阶段（检验员或零售商均可）
+    // 2. Record a stage (can be called by inspector or retailer)
     function recordStage(
         uint256 batchId,
         FruitTraceability.StageType stage,
@@ -107,7 +105,7 @@ contract PermissionControl is AccessControl {
             .internalRecordStage(batchId, stage, location, timestamp);
     }
 
-    // 3. 请求所有权转移（本示例仅限农户触发，可自行扩展）
+    // 3. Request ownership transfer (example: only farmer can trigger; can be extended)
     function requestOwnershipTransfer(uint256 batchId, address newOwner)
         external onlyRole(FARMER_ROLE)
     {
@@ -116,3 +114,4 @@ contract PermissionControl is AccessControl {
             .internalTransferOwnership(batchId, msg.sender, newOwner);
     }
 }
+

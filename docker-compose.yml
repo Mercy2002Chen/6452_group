@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:16
+    container_name: postgres_db
+    environment:
+      POSTGRES_DB: fruit_chain
+      POSTGRES_USER: fruit_user
+      POSTGRES_PASSWORD: fruit_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  backend:
+    build:
+      context: .                 # ← 设置为当前目录即可
+      dockerfile: Dockerfile.backend
+    container_name: backend_api
+    env_file:
+      - .env                     # ← .env 文件也在根目录
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+
+
+  frontend:
+    build:
+      context: ./fruit-dapp    # ✅ 修正路径为 fruit-dapp
+      dockerfile: Dockerfile.frontend
+    container_name: frontend_app
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+
+
+volumes:
+  db_data:

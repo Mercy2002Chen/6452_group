@@ -8,9 +8,9 @@ from web3._utils.events import event_abi_to_log_topic, get_event_data
 from contextlib import asynccontextmanager
 from dotenv import load_dotenv
 
-load_dotenv()  # 加载 .env 文件
+load_dotenv()  # Load environment variables from .env
 
-# ---------- 配置 ----------
+# ---------- Configuration ----------
 RPC_URL = os.getenv("RPC_URL")
 PERM_ADDR = os.getenv("PERMISSION_ADDR")
 TRACE_ADDR = os.getenv("TRACE_ADDR")
@@ -30,7 +30,7 @@ def load_abi(path):
     with open(path, 'r') as f:
         return json.load(f)['abi']
 
-# ---------- ABI & 合约实例 ----------
+# ---------- ABI & Contract Instances ----------
 perm_abi = load_abi(PERM_ABI_PATH)
 trace_abi = load_abi(TRACE_ABI_PATH)
 
@@ -46,20 +46,19 @@ trace_contract = w3.eth.contract(
 
 PERM_ADDR = Web3.to_checksum_address(os.getenv("PERMISSION_ADDR"))
 TRACE_ADDR = Web3.to_checksum_address(os.getenv("TRACE_ADDR"))
-# ---------- 数据库连接池 ----------
-# offchain.py
 
-offchain_pool = None  # 🔁 原来的 db_pool
+# ---------- Database Connection Pool ----------
+offchain_pool = None  # Same as db_pool
 
 async def init_offchain_pool():
     global offchain_pool
     offchain_pool = await asyncpg.create_pool(dsn=DB_DSN)
-    print("✅ offchain 线程连接池已初始化")
+    print("✅ Offchain DB connection pool initialized")
 
 @asynccontextmanager
 async def offchain_conn():
     if offchain_pool is None:
-        raise RuntimeError("❌ offchain_pool 尚未初始化")
+        raise RuntimeError("❌ offchain_pool not initialized")
     async with offchain_pool.acquire() as conn:
         yield conn
 
@@ -73,7 +72,7 @@ def get_event_abi_and_name_by_topic(log, abi):
                 return e, e["name"]
     raise ValueError("⚠️ No matching event ABI for topic[0] = " + topic0.hex())
 
-# ---------- 日志解析 ----------
+# ---------- Event Name Resolver ----------
 def parse_event(log, abi):
     topic = log['topics'][0].hex()
     for item in abi:
@@ -81,10 +80,11 @@ def parse_event(log, abi):
             return item["name"]
     return "UnknownEvent"
 
-# ---------- 同步事件主循环 ----------
+# ---------- Main Event Sync Loop ----------
 async def sync_loop_async():
     await init_offchain_pool()
-    print("🌀 正在监听链上日志...")
+    print("🌀 Listening to blockchain events...")
+
     while True:
         try:
             logs = w3.eth.get_logs({
@@ -98,18 +98,18 @@ async def sync_loop_async():
                     abi = perm_abi if contract_addr.lower() == PERM_ADDR.lower() else trace_abi
                     tx_hash = log["transactionHash"].hex()
 
-                    # 👇 每次日志循环
+                    # 👇 Per-log handling
                     event_abi, event_name = get_event_abi_and_name_by_topic(log, abi)
                     event_data = get_event_data(w3.codec, event_abi, log)
-                    print(f"[链上事件] {event_name} @ {tx_hash}")
+                    print(f"[Blockchain Event] {event_name} @ {tx_hash}")
 
-                    # ✅ 插入日志表
+                    # ✅ Insert into log table
                     await conn.execute(
                         "INSERT INTO logs (tx_hash, event_name) VALUES ($1, $2) ON CONFLICT DO NOTHING",
                         tx_hash, event_name
                     )
 
-                    # ✅ 分发逻辑
+                    # ✅ Event Dispatch
                     if event_name == "BatchRegistered":
                         try:
                             args = event_data["args"]
@@ -125,114 +125,74 @@ async def sync_loop_async():
                             """, batch_id, metadata, owner)
 
                         except Exception as e:
-                            print(f"❌ 处理 BatchRegistered 事件失败: {e}")
+                            print(f"❌ Failed to process BatchRegistered event: {e}")
 
 
                     elif event_name.startswith("RoleGranted"):
-
                         try:
-
                             args = event_data["args"]
-
                             role = args["role"]
-
                             account = args["account"]
 
-                            # ✅ 角色映射：将 bytes32 转换为可读字符串
-
+                            # ✅ Role hash mapping to readable names
                             role_map = {
-
                                 Web3.keccak(text="FARMER_ROLE"): "FARMER_ROLE",
-
                                 Web3.keccak(text="INSPECTOR_ROLE"): "INSPECTOR_ROLE",
-
                                 Web3.keccak(text="RETAILER_ROLE"): "RETAILER_ROLE",
-
                             }
 
                             role_name = role_map.get(role)
-
                             if not role_name:
-
-                                print(f"⚠️ 未识别的角色哈希: {role.hex()}, 已跳过")
-
+                                print(f"⚠️ Unrecognized role hash: {role.hex()}, skipped")
                             else:
-
-                                print(f"✅ 授权角色: {account} ← {role_name}")
-
+                                print(f"✅ Granted role: {account} ← {role_name}")
                                 await conn.execute("""
-
                                     INSERT INTO user_roles (address, role_name)
-
                                     VALUES ($1, $2)
-
                                     ON CONFLICT (address, role_name) DO NOTHING
-
                                 """, account, role_name)
 
-
                         except Exception as e:
-
-                            print(f"❌ 处理 RoleGranted 事件失败: {e}")
-
+                            print(f"❌ Failed to process RoleGranted event: {e}")
 
                     elif event_name.startswith("RoleRevoked"):
-
                         try:
-
                             args = event_data["args"]
-
                             role = args["role"]
-
                             account = args["account"]
 
-                            # ✅ 同样的角色哈希映射
-
                             role_map = {
-
                                 Web3.keccak(text="FARMER_ROLE"): "FARMER_ROLE",
-
                                 Web3.keccak(text="INSPECTOR_ROLE"): "INSPECTOR_ROLE",
-
                                 Web3.keccak(text="RETAILER_ROLE"): "RETAILER_ROLE",
-
                             }
 
                             role_name = role_map.get(role)
-
                             if not role_name:
-
-                                print(f"⚠️ 未识别的角色哈希: {role.hex()}, 撤销跳过")
-
+                                print(f"⚠️ Unrecognized role hash: {role.hex()}, revoke skipped")
                             else:
-
-                                print(f"❎ 撤销角色: {account} → {role_name}")
-
+                                print(f"❎ Revoked role: {account} → {role_name}")
                                 await conn.execute("""
-
                                     DELETE FROM user_roles
-
                                     WHERE address = $1 AND role_name = $2
-
                                 """, account, role_name)
 
-
                         except Exception as e:
+                            print(f"❌ Failed to process RoleRevoked event: {e}")
 
-                            print(f"❌ 处理 RoleRevoked 事件失败: {e}")
                     elif event_name == "StageRecorded":
                         try:
                             args = event_data["args"]
                             batch_id = args["batchId"]
-                            stage = args["stage"]  # uint8 → 整型阶段编号
+                            stage = args["stage"]
                             location = args["location"]
                             timestamp = args["timestamp"]
-                            actor = args["actor"]  # 直接来自事件中的 indexed actor
+                            actor = args["actor"]
 
                             from datetime import datetime
                             ts_block = datetime.utcfromtimestamp(timestamp)
 
-                            print(f"📍 阶段记录: 批次 {batch_id} - 阶段 {stage} @ {location} by {actor}")
+                            print(f"📍 StageRecorded: Batch {batch_id} - Stage {stage} @ {location} by {actor}")
 
                             await conn.execute("""
                                 INSERT INTO stages (batch_id, stage, location, ts_block, actor)
@@ -240,15 +200,9 @@ async def sync_loop_async():
                             """, batch_id, stage, location, ts_block, actor)
 
                         except Exception as e:
-                            print(f"❌ 处理 StageRecorded 事件失败: {e}")
-
-
-
-
+                            print(f"❌ Failed to process StageRecorded event: {e}")
 
         except Exception as e:
-            print("[⚠️ 日志监听错误]", e)
+            print("[⚠️ Event listener error]", e)
 
         await asyncio.sleep(10)
-
-# ---------- 启动后台线程 ---------

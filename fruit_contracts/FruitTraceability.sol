@@ -3,49 +3,49 @@ pragma solidity ^0.8.0;
 
 /**
  *  FruitTraceability (aka FruitSupplyChain)
- *  - 负责存储批次与阶段数据
- *  - 仅允许 PermissionControl 合约调用写操作
- *  - 提供只读查询接口给任何人
+ *  - Responsible for storing batch and stage data
+ *  - Only the PermissionControl contract is allowed to perform write operations
+ *  - Provides read-only query interfaces accessible to anyone
  */
 contract FruitTraceability {
-    /// 供应链阶段枚举，可按需增删
+    /// Supply chain stage enumeration; can be modified as needed
     enum StageType {
-        Harvested,     // 采摘
-        Inspected,     // 质检
-        Packed,        // 包装
-        Shipped,       // 物流
-        InStore,       // 零售上架
-        Sold           // 售出
+        Harvested,     // Harvested
+        Inspected,     // Inspected
+        Packed,        // Packed
+        Shipped,       // Shipped
+        InStore,       // In-store
+        Sold           // Sold
     }
 
-    /// 单个阶段的完整记录
+    /// A complete record for a single stage
     struct Stage {
-        StageType stage;      // 阶段类型
-        string location;      // 发生地点
-        uint256 timestamp;    // 时间戳
-        address actor;        // 操作者（检验员/零售商）
+        StageType stage;      // Stage type
+        string location;      // Location of the stage
+        uint256 timestamp;    // Timestamp
+        address actor;        // Actor (inspector/retailer)
     }
 
-    /// 批次信息
+    /// Batch information
     struct Batch {
-        bool exists;          // 是否已注册
-        string metadata;      // 额外描述（品种、等级……）
-        address currentOwner; // 当前所有者
-        address farmer;       // 初始农户
-        Stage[] stages;       // 阶段数组
+        bool exists;          // Whether the batch is registered
+        string metadata;      // Additional description (variety, grade, etc.)
+        address currentOwner; // Current owner
+        address farmer;       // Original farmer
+        Stage[] stages;       // Array of stage records
     }
 
-    /// 批次ID => 批次详情
+    /// Mapping: batch ID => batch details
     mapping(uint256 => Batch) private batches;
 
-    /// 只有 PermissionControl 地址才能修改状态
+    /// Only the PermissionControl address can modify the state
     address public immutable permissionControl;
     modifier onlyPermission() {
         require(msg.sender == permissionControl, "Not PermissionControl");
         _;
     }
 
-    /* ─────────── 事件 ─────────── */
+    /* ─────────── Events ─────────── */
     event BatchRegistered(uint256 indexed batchId, address indexed farmer, string metadata);
     event StageRecorded(
         uint256 indexed batchId,
@@ -61,9 +61,9 @@ contract FruitTraceability {
         permissionControl = _permissionControl;
     }
 
-    /* ─────────── 写操作（仅 PermissionControl 可调） ─────────── */
+    /* ─────────── Write Operations (Only PermissionControl Can Call) ─────────── */
 
-    /// 农户注册新批次
+    /// Farmer registers a new batch
     function internalRegisterBatch(
         uint256 batchId,
         string calldata metadata,
@@ -79,7 +79,7 @@ contract FruitTraceability {
         emit BatchRegistered(batchId, farmer, metadata);
     }
 
-    /// 批次所有权转移
+    /// Transfer ownership of a batch
     function internalTransferOwnership(
         uint256 batchId,
         address from,
@@ -93,7 +93,7 @@ contract FruitTraceability {
         emit OwnershipTransferred(batchId, from, to);
     }
 
-    /// 记录供应链阶段
+    /// Record a supply chain stage
     function internalRecordStage(
         uint256 batchId,
         StageType stage,
@@ -107,15 +107,15 @@ contract FruitTraceability {
             stage:      stage,
             location:   location,
             timestamp:  timestamp,
-            actor:      tx.origin   // 记录最终调用者身份
+            actor:      tx.origin   // Capture the original sender (EOA)
         }));
 
         emit StageRecorded(batchId, stage, location, timestamp, tx.origin);
     }
 
-    /* ─────────── 读接口（任何人可调） ─────────── */
+    /* ─────────── Read Interfaces (Callable by Anyone) ─────────── */
 
-    /// 批次概要
+    /// Get batch overview
     function getBatchOverview(uint256 batchId)
         external view
         returns (string memory metadata, address currentOwner, uint256 stageCount)
@@ -125,7 +125,7 @@ contract FruitTraceability {
         return (b.metadata, b.currentOwner, b.stages.length);
     }
 
-    /// 查询指定阶段
+    /// Get a specific stage by index
     function getStage(uint256 batchId, uint256 index)
         external view
         returns (StageType stage, string memory location, uint256 timestamp, address actor)
@@ -136,11 +136,12 @@ contract FruitTraceability {
         return (s.stage, s.location, s.timestamp, s.actor);
     }
 
-    /// 仅获取当前所有者
+    /// Get the current owner of a batch
     function getCurrentOwner(uint256 batchId) external view returns (address) {
         Batch storage b = batches[batchId];
         require(b.exists, "Batch not found");
         return b.currentOwner;
     }
 }
+
 
