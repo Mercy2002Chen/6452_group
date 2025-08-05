@@ -43,9 +43,10 @@ uvicorn api:app --reload
 ### 2️⃣ 前端界面（Vite + React）
 
 进入前端项目目录（例如 `fruit-dapp/`）：
-
+启动开发服务器
 ```bash
 cd fruit-dapp
+npm run dev
 ```
 
 安装依赖：
@@ -54,11 +55,8 @@ cd fruit-dapp
 npm install
 ```
 
-启动开发服务器：
 
-```bash
-npm run dev
-```
+
 
 - 默认前端服务运行在：`http://localhost:5173`
 - 若调用后端 API，请确保前端代码中的接口地址正确配置，例如：
