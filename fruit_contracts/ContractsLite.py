@@ -83,7 +83,11 @@ class ContractsLite:
     def build_grant_role_tx(self, from_addr: str, role: str, account: str):
         from_addr = self._addr(from_addr)
         account = self._addr(account)
-        role_hash = self.web3.keccak(text=role)
+        if role == "DEFAULT_ADMIN_ROLE":
+            role_hash = bytes(32)
+        else:
+            role_hash = self.web3.keccak(text=role)
+
         gas = self.permission.functions.grantRole(role_hash, account).estimate_gas({"from": from_addr})
         return self.permission.functions.grantRole(role_hash, account).build_transaction(
             self._build_common(from_addr, gas)

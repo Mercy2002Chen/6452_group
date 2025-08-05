@@ -139,6 +139,7 @@ async def sync_loop_async():
                                 Web3.keccak(text="FARMER_ROLE"): "FARMER_ROLE",
                                 Web3.keccak(text="INSPECTOR_ROLE"): "INSPECTOR_ROLE",
                                 Web3.keccak(text="RETAILER_ROLE"): "RETAILER_ROLE",
+                                bytes(32): "DEFAULT_ADMIN_ROLE",
                             }
 
                             role_name = role_map.get(role)
@@ -165,6 +166,7 @@ async def sync_loop_async():
                                 Web3.keccak(text="FARMER_ROLE"): "FARMER_ROLE",
                                 Web3.keccak(text="INSPECTOR_ROLE"): "INSPECTOR_ROLE",
                                 Web3.keccak(text="RETAILER_ROLE"): "RETAILER_ROLE",
+                                bytes(32): "DEFAULT_ADMIN_ROLE",
                             }
 
                             role_name = role_map.get(role)
