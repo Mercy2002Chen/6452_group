@@ -203,6 +203,24 @@ async def sync_loop_async():
 
                         except Exception as e:
                             print(f"❌ Failed to process StageRecorded event: {e}")
+                    elif event_name == "OwnershipTransferred":
+                        try:
+                            args = event_data["args"]
+                            batch_id = args["batchId"]
+                            from_addr = args["from"]
+                            to_addr = args["to"]
+
+                            print(f"🔁 OwnershipTransferred: Batch {batch_id} - {from_addr} → {to_addr}")
+
+                            await conn.execute("""
+                                UPDATE batches
+                                SET current_owner = $1
+                                WHERE batch_id = $2
+                            """, to_addr, batch_id)
+
+                        except Exception as e:
+                            print(f"❌ Failed to process OwnershipTransferred event: {e}")
+
 
         except Exception as e:
             print("[⚠️ Event listener error]", e)
